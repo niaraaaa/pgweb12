@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Peta Interaktif - Kabupaten Sleman</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    #map {
+      width: 100%;
+      height: 700px;
+    }
+    .legend-container {
+      background: white;
+      padding: 10px;
+      border: 1px solid #ccc;
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      z-index: 1000;
+      max-width: 150px;
+    }
+    .leaflet-control-layers {
+      z-index: 1001; /* Pastikan kontrol layer berada di atas elemen lain */
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <script>
+    // Inisialisasi peta
+    var map = L.map("map").setView([-7.677567, 110.406899], 12);
+
+    // Tambahkan basemap OpenStreetMap
+    var osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 11,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    }).addTo(map);
+
+    // Layer Batas Administrasi Desa
+    var wmsLayer1 = L.tileLayer.wms("http://localhost:8080/geoserver/wms", {
+      layers: "pgweb_acara10:ADMINISTRASIDESA_AR_25K", 
+      transparent: true,
+      format: "image/png",
+    });
+
+    // Layer Jalan Kabupaten Sleman
+    var wmsLayer2 = L.tileLayer.wms("https://geoportal.slemankab.go.id/geoserver/wms", {
+      layers: "geonode:jalan_kabupaten_sleman_2023",
+      transparent: true,
+      format: "image/png",
+    });
+
+    // Layer Sarana Ibadah Sleman
+    var wmsLayer3 = L.tileLayer.wms("http://localhost:8080/geoserver/wms", {
+      layers: "pgweb_latihan:SARANAIBADAH_PT_25K", // Ganti sesuai nama layer GeoServer Anda
+      transparent: true,
+      format: "image/png",
+    });
+
+    // Menambahkan kontrol layer
+    var baseMaps = {
+      "OpenStreetMap": osm,
+    };
+
+    var overlayMaps = {
+      "Batas Administrasi Desa": wmsLayer1,
+      "Jalan Kabupaten Sleman": wmsLayer2,
+      "Sarana Ibadah": wmsLayer3,
+    };
+
+    var layerControl = L.control.layers(baseMaps, overlayMaps).addTo(map);
+
+    // Menambahkan Legend
+    var legendURL = "http://localhost:8080/geoserver/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0" +
+                    "&FORMAT=image/png&LAYER=pgweb_acara10:ADMINISTRASIDESA_AR_25K"; 
+
+    var legendDiv = L.control({ position: "bottomleft" });
+    legendDiv.onAdd = function () {
+      var div = L.DomUtil.create("div", "legend-container");
+      div.innerHTML = `
+        <h4>Legenda</h4>
+        <img src="${legendURL}" alt="Legenda" height="500px">
+      `;
+      return div;
+    };
+    legendDiv.addTo(map);
+
+  </script>
+</body>
+</html>
